@@ -1,7 +1,6 @@
 package misc.mandelbrot;
 
 import java.awt.Color;
-import java.awt.FlowLayout;
 
 import javax.swing.JFrame;
 
@@ -25,6 +24,10 @@ public class MainWindow extends JFrame {
 
 	static void writePixelData(int pixelIndex, Color pixelColor) {
 		contentCanvas.writePixelData(pixelIndex, pixelColor);
+	}
+	
+	void clearContentImage() {
+		contentCanvas.clearContentImage();
 	}
 
 }

@@ -53,14 +53,20 @@ public class MathALU {
 		// Reset Variables - Must reset to zero, since the values are cumulative
 		// not objective/direct.
 		if (appContext.RECORD_INTERMEDIATE_CALCULATIONS) {
+			//Clear old image
+			appContext.clearContentImage();
+			
+			//Clear old pixel data
 			appContext.MOST_PIXEL_TOUCHES_R = 0;
 			appContext.MOST_PIXEL_TOUCHES_G = 0;
 			appContext.MOST_PIXEL_TOUCHES_B = 0;
+			appContext.MOST_PIXEL_TOUCHES_RAW = 0;
 			int len = appContext.NUM_PIXELS;
 			for (int x = 0; x < len; x++) {
 				appContext.traversalData_R.get(x).set(0);
 				appContext.traversalData_G.get(x).set(0);
 				appContext.traversalData_B.get(x).set(0);
+				appContext.traversalData_Raw.get(x).set(0);
 			}
 		}
 
@@ -88,24 +94,26 @@ public class MathALU {
 				// Calculate Pixel
 				if (appContext.SMOOTH_POINTS) {
 					// Find Adjacent Pixels
-					ComplexNumber topPixel = getComplexNumberForXY(new PVector(x, y - 1));
-					ComplexNumber bottomPixel = getComplexNumberForXY(new PVector(x, y + 1));
-					ComplexNumber leftPixel = getComplexNumberForXY(new PVector(x - 1, y));
-					ComplexNumber rightPixel = getComplexNumberForXY(new PVector(x + 1, y));
+					ComplexNumber topPixel		= getComplexNumberForXY(new PVector(x, y - 1));
+					ComplexNumber bottomPixel	= getComplexNumberForXY(new PVector(x, y + 1));
+					ComplexNumber leftPixel		= getComplexNumberForXY(new PVector(x - 1, y));
+					ComplexNumber rightPixel	= getComplexNumberForXY(new PVector(x + 1, y));
 
 					// Calculate partial steps towards adjacent pixels
-					ComplexNumber upPoint = centerPoint.getOneThirdStepTowards(topPixel);
-					ComplexNumber downPoint = centerPoint.getOneThirdStepTowards(bottomPixel);
-					ComplexNumber leftPoint = centerPoint.getOneThirdStepTowards(leftPixel);
-					ComplexNumber rightPoint = centerPoint.getOneThirdStepTowards(rightPixel);
+					ComplexNumber upPoint		= centerPoint.getOneThirdStepTowards(topPixel);
+					ComplexNumber downPoint		= centerPoint.getOneThirdStepTowards(bottomPixel);
+					ComplexNumber leftPoint		= centerPoint.getOneThirdStepTowards(leftPixel);
+					ComplexNumber rightPoint	= centerPoint.getOneThirdStepTowards(rightPixel);
 
 					// Calculate Mandelbrot values for outward steps
-					Color upColor = calcMandelPoint(ComplexNumber.ZERO, upPoint, maxIterations);
-					Color downColor = calcMandelPoint(ComplexNumber.ZERO, downPoint, maxIterations);
-					Color leftColor = calcMandelPoint(ComplexNumber.ZERO, leftPoint, maxIterations);
-					Color rightColor = calcMandelPoint(ComplexNumber.ZERO, rightPoint, maxIterations);
+					Color upColor		= calcMandelPoint(ComplexNumber.ZERO, upPoint, maxIterations);
+					Color downColor		= calcMandelPoint(ComplexNumber.ZERO, downPoint, maxIterations);
+					Color leftColor		= calcMandelPoint(ComplexNumber.ZERO, leftPoint, maxIterations);
+					Color rightColor	= calcMandelPoint(ComplexNumber.ZERO, rightPoint, maxIterations);
 
-					// Save average color value as pixel
+					//Save average color value as pixel //Move this outside the main calc method; as is, it calculates the normal color even when trying to calculate intermediates, doubling the work.
+					//And smooth doesn't seem to take effect on intermediates in terms of actual results, it only makes the calculation slower, because it's calculating the smooth for the normal color,
+					//and then throwing it away, and not calculating smooth for the intermediates.
 					appContext.writePixelData(pixelIndex, ColorUtils.avgColors(upColor, downColor, leftColor, rightColor));
 				} else {
 					appContext.writePixelData(pixelIndex, calcMandelPoint(ComplexNumber.ZERO, centerPoint, maxIterations));
@@ -115,6 +123,11 @@ public class MathALU {
 
 		// Reset flag
 		appContext.CALCULATING = false;
+		
+		final long _max = appContext.traversalData_Raw.parallelStream().mapToLong((d) -> d.get()).max().getAsLong();
+		final long _max_log = appContext.traversalData_Raw.parallelStream().mapToLong((d) -> d.get() == 0 ? 0 : (long)Math.log(d.get())).max().getAsLong();
+		
+		System.err.println("\n\n---\n_mad:\t"+_max +"\n_max_log:\t"+_max_log+"\n---\n\n");
 
 		// println("MOST_PIXEL_TOUCHES_R: "+MOST_PIXEL_TOUCHES_R);
 		// println("MOST_PIXEL_TOUCHES_G: "+MOST_PIXEL_TOUCHES_G);
@@ -142,23 +155,31 @@ public class MathALU {
 					final int pixelIndex = getPixelIndexForXY(coordinates);
 
 					// Increment
+					appContext.traversalData_Raw.get(pixelIndex).incrementAndGet();
 					if (numIterations < 500) {
 						appContext.traversalData_R.get(pixelIndex).incrementAndGet();
 					}
-					if (numIterations < 5000) {
+					if (numIterations < 1500) {
 						appContext.traversalData_B.get(pixelIndex).incrementAndGet();
 					}
 					appContext.traversalData_G.get(pixelIndex).incrementAndGet();
 
 					// Update rolling maximum
 					if (appContext.traversalData_R.get(pixelIndex).get() > appContext.MOST_PIXEL_TOUCHES_R) {
+//						System.out.println("Increasing Max Pixel Touches [R]:\t"+appContext.MOST_PIXEL_TOUCHES_R+" -> "+appContext.traversalData_R.get(pixelIndex).get());
 						appContext.MOST_PIXEL_TOUCHES_R = appContext.traversalData_R.get(pixelIndex).get();
 					}
 					if (appContext.traversalData_G.get(pixelIndex).get() > appContext.MOST_PIXEL_TOUCHES_G) {
+//						System.out.println("Increasing Max Pixel Touches [G]:\t"+appContext.MOST_PIXEL_TOUCHES_G+" -> "+appContext.traversalData_G.get(pixelIndex).get());
 						appContext.MOST_PIXEL_TOUCHES_G = appContext.traversalData_G.get(pixelIndex).get();
 					}
 					if (appContext.traversalData_B.get(pixelIndex).get() > appContext.MOST_PIXEL_TOUCHES_B) {
+//						System.out.println("Increasing Max Pixel Touches [B]:\t"+appContext.MOST_PIXEL_TOUCHES_B+" -> "+appContext.traversalData_B.get(pixelIndex).get());
 						appContext.MOST_PIXEL_TOUCHES_B = appContext.traversalData_B.get(pixelIndex).get();
+					}
+					if (appContext.traversalData_Raw.get(pixelIndex).get() > appContext.MOST_PIXEL_TOUCHES_RAW) {
+//						System.out.println("Increasing Max Pixel Touches [Raw]:\t"+appContext.MOST_PIXEL_TOUCHES_RAW+" -> "+appContext.traversalData_Raw.get(pixelIndex).get());
+						appContext.MOST_PIXEL_TOUCHES_RAW = appContext.traversalData_Raw.get(pixelIndex).get();
 					}
 				}
 			}

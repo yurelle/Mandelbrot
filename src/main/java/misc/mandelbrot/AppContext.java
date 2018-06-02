@@ -20,6 +20,7 @@ public class AppContext {
 	boolean RECORD_INTERMEDIATE_CALCULATIONS = false;
 	boolean DONT_FILL_BOUNDED = false;
 	boolean IN_COLOR = false;
+	boolean MOD_BRIGHTNESS = false;
 	boolean SMOOTH_POINTS = false;
 	boolean SIMPLE_MAGNITUDE = false;
 	
@@ -43,6 +44,7 @@ public class AppContext {
 		"[R] Rebuild Pixel Data",
 		"[I] Record Intermediate Calculations",
 		"[C] Render in Color",
+		"[X] Scale brightness using cyclic_modulous (X-Ray)",// (val % 255) rather than log
 		"[O] Fill overflow regions",
 		"[S] Calculate 'Smooth' point data",
 		"[M] Use 'simple' magnitude approximation",
@@ -58,6 +60,7 @@ public class AppContext {
 		() -> null,
 		() -> RECORD_INTERMEDIATE_CALCULATIONS,
 		() -> IN_COLOR,
+		() -> MOD_BRIGHTNESS,
 		() -> !DONT_FILL_BOUNDED,
 		() -> SMOOTH_POINTS,
 		() -> SIMPLE_MAGNITUDE,
@@ -85,12 +88,18 @@ public class AppContext {
 	ArrayList<AtomicLong> traversalData_R;
 	ArrayList<AtomicLong> traversalData_G;
 	ArrayList<AtomicLong> traversalData_B;
+	ArrayList<AtomicLong> traversalData_Raw;
 	long MOST_PIXEL_TOUCHES_R;
 	long MOST_PIXEL_TOUCHES_G;
 	long MOST_PIXEL_TOUCHES_B;
+	long MOST_PIXEL_TOUCHES_RAW;
 	
 	void writePixelData(int pixelIndex, Color pixelColor) {
 		appWindow.writePixelData(pixelIndex, pixelColor);
+	}
+	
+	void clearContentImage() {
+		appWindow.clearContentImage();
 	}
 	
 	public MainWindow appWindow;
@@ -123,9 +132,11 @@ public class AppContext {
 		traversalData_R = new ArrayList<>(NUM_PIXELS);
 		traversalData_G = new ArrayList<>(NUM_PIXELS);
 		traversalData_B = new ArrayList<>(NUM_PIXELS);
+		traversalData_Raw = new ArrayList<>(NUM_PIXELS);
 		MOST_PIXEL_TOUCHES_R = 0;
 		MOST_PIXEL_TOUCHES_G = 0;
 		MOST_PIXEL_TOUCHES_B = 0;
+		MOST_PIXEL_TOUCHES_RAW = 0;
 		//println(pixelData.length);
 		
 		//Init Pixel Arrays
@@ -133,6 +144,7 @@ public class AppContext {
 		  traversalData_R.add(new AtomicLong(0L));
 		  traversalData_G.add(new AtomicLong(0L));
 		  traversalData_B.add(new AtomicLong(0L));
+		  traversalData_Raw.add(new AtomicLong(0L));
 		}
 	}
 	

@@ -5,6 +5,45 @@ import java.awt.Color;
 public class ColorUtils {
 	private static AppContext appContext = App.APP_CONTEXT;
 	
+	static int grayscaleAsInt(int brightness) {
+		return rgbAsInt(brightness, brightness, brightness);
+	}
+	
+	/**
+	 * Taken directly from the source code for the java.awt.Color(int r, int g, int b) constructor.
+	 * 
+	 * @See: http://grepcode.com/file/repository.grepcode.com/java/root/jdk/openjdk/6-b14/java/awt/Color.java#Color.%3Cinit%3E%28int%2Cint%2Cint%29
+	 */
+	static int rgbAsInt(int r, int g, int b) {
+		return	rgbaAsInt(r, g, b, 255);
+	}
+	static int rgbaAsInt(int r, int g, int b, int a) {
+		return	((a & 0xFF) << 24) |
+				((r & 0xFF) << 16) |
+				((g & 0xFF) << 8)  |
+				((b & 0xFF) << 0);
+	}
+	
+	static int getLogReducedBrightness(final long pixelVal, final long maxVal) {
+		final long log_pixelVal = log_nonNull(pixelVal);
+		final long log_maxVal = log_nonNull(maxVal);
+		
+		//Scale brightness to 255
+		return (int) Math.round(MathALU.mapDouble(log_pixelVal, 0, log_maxVal, 0, 255));
+	}
+	
+	static long log_nonNull(final long rawVal) {
+		//Log of Zero is undefined; kind of like dividing by zero
+		final long logValue;
+		if (rawVal > 0) {
+			logValue = Math.round(Math.log(rawVal));
+		} else {
+			logValue = 0;
+		}
+		
+		return logValue;
+	}
+	
 	static Color avgColors(Color... colors) {
 		// Init totals
 		int R = 0;

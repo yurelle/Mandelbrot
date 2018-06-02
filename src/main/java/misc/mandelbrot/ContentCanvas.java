@@ -6,13 +6,11 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -40,13 +38,16 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 		
 		BG_COLOR = new Color (51,51,51);
 		contentImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
-		
-		Graphics2D imgG2 = (Graphics2D) contentImage.getGraphics();
-		imgG2.setColor(BG_COLOR);
-		imgG2.fillRect(0, 0, getWidth(), getHeight());
+		clearContentImage();
 		
 		//Set Goal FPS
 		fpsTimer.scheduleAtFixedRate(this::repaint, 0L, 1000L/30, TimeUnit.MILLISECONDS);
+	}
+	
+	void clearContentImage() {
+		Graphics2D imgG2 = (Graphics2D) contentImage.getGraphics();
+		imgG2.setColor(BG_COLOR);
+		imgG2.fillRect(0, 0, getWidth(), getHeight());
 	}
 	
 	void writePixelData(int pixelIndex, int r, int g, int b) {
@@ -81,27 +82,33 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 //			}
 
 			for (int x = 0; x < appContext.NUM_PIXELS; x++) {
-				final long pixelVal = appContext.traversalData_G.get(x).get();
+//				final long pixelVal = appContext.traversalData_G.get(x).get();
 				// final int brightness = (int) map(pixelVal, 0, MOST_PIXEL_TOUCHES_G, 0, 255);
 				// final int brightness = (int) map(pixelVal, 0, avgBrightness*5, 0, 255);
 				// final int brightness = min((int) map(pixelVal, 0, MOST_PIXEL_TOUCHES, 0, 512), 255);//Increase brightness
-				final int brightness = (int) Math.min(pixelVal, 255);
+				//final int brightness = (int) Math.min(pixelVal, 255);
+
 
 				if (appContext.IN_COLOR) {
-					int R = (int) appContext.traversalData_R.get(x).longValue();
-					int G = (int) appContext.traversalData_G.get(x).longValue();
-					int B = (int) appContext.traversalData_B.get(x).longValue();
-					contentImage.setRGB(x % getWidth(), x / getWidth(), new Color(R, G, B).getRGB());
+					int R = (int) ColorUtils.getLogReducedBrightness(appContext.traversalData_R.get(x).longValue(), appContext.MOST_PIXEL_TOUCHES_R);
+					int G = (int) ColorUtils.getLogReducedBrightness(appContext.traversalData_G.get(x).longValue(), appContext.MOST_PIXEL_TOUCHES_G);
+					int B = (int) ColorUtils.getLogReducedBrightness(appContext.traversalData_B.get(x).longValue(), appContext.MOST_PIXEL_TOUCHES_B);
+					contentImage.setRGB(x % getWidth(), x / getWidth(), ColorUtils.rgbAsInt(R, G, B));
 				} else {
-					// int brightness = (int) traversalData_G[x];
-					contentImage.setRGB(x % getWidth(), x / getWidth(), new Color(brightness, brightness, brightness).getRGB());
+					final long pixelVal = appContext.traversalData_Raw.get(x).get();
+					final int brightness;
+					if (appContext.MOD_BRIGHTNESS) {
+						brightness = (int) (pixelVal % 255);
+					} else {
+						brightness = ColorUtils.getLogReducedBrightness(pixelVal, appContext.MOST_PIXEL_TOUCHES_RAW);
+					}
+					contentImage.setRGB(x % getWidth(), x / getWidth(), ColorUtils.grayscaleAsInt(brightness));
 				}
 			}
-		} else {
-			//arrayCopy(appContext.pixelData, pixels);
-			g.drawImage(contentImage, 0, 0, this);
 		}
-//		updatePixels();
+		
+		//Draw finished data to screen
+		g.drawImage(contentImage, 0, 0, this);
 
 		if (mouseDragging) {
 			g.setStroke(new BasicStroke(1));
@@ -131,14 +138,15 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 		if (appContext.SHOW_MENU) {
 		//--Draw Menu Box
 			g.setStroke(new BasicStroke(1));
+			Rectangle menuBox = new Rectangle(0, 0, 310, 265);
 			
 			//Background fill
 			g.setColor(new Color(128, 128, 128, 255));
-			g.fillRect(0, 0, 280, 245);
+			g.fillRect(menuBox.x, menuBox.y, menuBox.width, menuBox.height);
 
 			//Border
 			g.setColor(new Color(0, 0, 0, 255));
-			g.drawRect(0, 0, 280, 245);
+			g.drawRect(menuBox.x, menuBox.y, menuBox.width, menuBox.height);
 
 		//--Paint Settings Status
 			int padding = 5;
@@ -283,6 +291,12 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 
 			// Rebuild Data
 			appContext.rebuildPixelData();
+		} else if (key == 'x' || key == 'X') {
+			// Toggle boolean
+			appContext.MOD_BRIGHTNESS = !appContext.MOD_BRIGHTNESS;
+
+			// Rebuild Data
+			appContext.rebuildPixelData();
 		} else if (key == 'o' || key == 'O') {
 			// Toggle boolean
 			appContext.DONT_FILL_BOUNDED = !appContext.DONT_FILL_BOUNDED;
@@ -301,7 +315,7 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 
 			// Rebuild Data
 			appContext.rebuildPixelData();
-		} else if (keyCode == 2) {// Home Key
+		} else if (key == KeyEvent.VK_HOME) {
 			// Save current viewport
 			appContext.pushCurrentViewport();
 
