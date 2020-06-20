@@ -1,0 +1,17 @@
+- Abstract out all of the precision code to interfaces, so that the precision can be swapped out without requiring manuall
+code modifications.
+- Make the precision swap a function of the app, so the user can choose which precision they want to calculate at. This
+would be very usefull for jumping around and exploring, since you could use single precision until it got pixilated, then
+switch to double precision until it got pixilated, then switch to quad, then finally switch to BigDecimal. You get the speed
+of low precision until you actually need the higher precision. (Similar to the "smooth" option)
+- Implement multi-threading. Just chop the image into multiple vertical chunks and use the same render code you already have.
+- Implement advanced multithreading. Break the image up into a grid of square chunks (like cinebench), then dump those chunks
+into a queue, and have a pool of threads pull chunks from the queue to process. With this architecture, you could even
+implement clustered rendering relatively easily. You could use a similar design strategy that OpenCL uses. Instead of
+coding the whole process, just code a function to call to calculate a single pixel. Then the chunking & distributing logic
+could be separated concerns. Since a single pixel's work is probably very small, each chunk could be a chunk of the horizontal
+line, and then these lines could be grouped into vertical (square) blocks. But, since you're just going to be calling a
+function, the context switching overhead probably doesn't matter, and maybe regular segmented 2D iteration is fine.
+- Look into GPU accelleration. This would be fine for single & double precision, but you'd have to port the DoubleDouble
+quad precision implementation into OpenCL, and the BigDecimal would be totally unsupported, unless you could find a
+similar library in OpenCL.

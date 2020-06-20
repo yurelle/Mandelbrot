@@ -1,92 +1,49 @@
 package misc.mandelbrot;
 
-import hellblazer.math.DoubleDouble;
-import misc.mandelbrot.number.SupportedNumeric;
-
 import java.awt.*;
 import java.math.BigDecimal;
 
-public class MathALU<T extends SupportedNumeric<T>> {
-//	private static AppContext appContext = App.APP_CONTEXT; //This is not populating in time for some reason. References throw Null Pointers. I tried setting in constructor but still NPE's.
+public class MathALU_BigD {
+	private static AppContext appContext = App.APP_CONTEXT;
 
-	//Precision Handle
-	private T NUM;
-
-	public MathALU(T NUM) {
-		this.NUM = NUM;
+	static BigDecimal mapInt(final int value, final int srcMin, final int srcMax, final int destMin, final int destMax) {
+		return mapDouble(new BigDecimal(value), new BigDecimal(srcMin), new BigDecimal(srcMax), new BigDecimal(destMin), new BigDecimal(destMax));
 	}
 
-	public T getFor(final int val) {
-		return NUM.getFor(val);
-	}
-	public T getFor(final long val) {
-		return NUM.getFor(val);
-	}
-	public T getFor(final float val) {
-		return NUM.getFor(val);
-	}
-	public T getFor(final double val) {
-		return NUM.getFor(val);
-	}
-	public T getFor(final DoubleDouble val) {
-		return NUM.getFor(val);
-	}
-	public T getFor(final BigDecimal val) {
-		return NUM.getFor(val);
-	}
-	public T getFor(final String numStr) {
-		return NUM.getFor(numStr);
-	}
-	public T getFor(final SupportedNumeric num) {
-		return NUM.getFor(num);
-	}
-
-	T mapInt(final int value, final int srcMin, final int srcMax, final int destMin, final int destMax) {
-		return map(getFor(value), getFor(srcMin), getFor(srcMax), getFor(destMin), getFor(destMax));
-	}
-
-	T mapLong(final long value, final long srcMin, final long srcMax, final long destMin, final long destMax) {
-		return map(getFor(value), getFor(srcMin), getFor(srcMax), getFor(destMin), getFor(destMax));
-	}
-
-	T mapDouble(final double value, final double srcMin, final double srcMax, final double destMin, final double destMax) {
-		return map(getFor(value), getFor(srcMin), getFor(srcMax), getFor(destMin), getFor(destMax));
-	}
-
-	T map(final T value, final T srcMin, final T srcMax, final T destMin, final T destMax) {
+	static BigDecimal mapDouble(final BigDecimal value, final BigDecimal srcMin, final BigDecimal srcMax, final BigDecimal destMin, final BigDecimal destMax) {
 		// Calculate source range
-		final T srcRange = srcMax.subtract(srcMin).abs();
+		final BigDecimal srcRange = absDouble(srcMax.subtract(srcMin));
 
-		// Translate value to be based on source range minimum (rather than zero)
-		final T srcAdjValue = value.subtract(srcMin);
+		// Translate value to be based on source range minimum (rather than
+		// zero)
+		final BigDecimal srcAdjValue = value.subtract(srcMin);
 
 		// Calculate source percentage
-		final T srcPercentage = srcAdjValue.divide(srcRange);
+		final BigDecimal srcPercentage = srcAdjValue.divide(srcRange);
 
 		// Calculate destination range
-		final T destRange = destMax.subtract(destMin).abs();
+		final BigDecimal destRange = absDouble(destMax.subtract(destMin));
 
 		// Calculate destination value in range
-		final T destRangeVal = srcPercentage.multiply(destRange);
+		final BigDecimal destRangeVal = srcPercentage.multiply(destRange);
 
-		// Translate dest range value to be based on zero (rather than dest range minimimum)
-		final T destVal = destRangeVal.add(destMin);
+		// Translate dest range value to be based on zero (rather than dest
+		// range minimimum)
+		final BigDecimal destVal = destRangeVal.add(destMin);
 
 		// Return result
 		return destVal;
 	}
 
-//	T absDouble(final T value) {
-//		if (value.compareTo(NUM.ZERO) < 0) {
-//			return value.negate();
-//		} else {
-//			return value;
-//		}
-//	}
+	static BigDecimal absDouble(final BigDecimal value) {
+		if (value.compareTo(new BigDecimal("0")) < 0) {
+			return value.negate();
+		} else {
+			return value;
+		}
+	}
 
-	void calcMandelFrame() {
-		AppContext appContext = App.APP_CONTEXT;
-
+	static void calcMandelFrame() {
 		/*
 		 * maxIterations is pulled out as a param due to multithreading issues. The menu event which changes maxIterations in the
 		 * application context, is processed before the command is sent to cancel the existing worker thread. Therefore, if max
@@ -137,34 +94,34 @@ public class MathALU<T extends SupportedNumeric<T>> {
 
 				// Derive the starting complex number from the xy coordinate of
 				// the pixel.
-				ComplexNumber centerPoint = getComplexNumberForXY(new PVector(x, y));
+				ComplexNumber_BigD centerPoint = getComplexNumberForXY(new PVector(x, y));
 
 				// Calculate Pixel
 				if (appContext.SMOOTH_POINTS) {
 					// Find Adjacent Pixels
-					ComplexNumber topPixel		= getComplexNumberForXY(new PVector(x, y - 1));
-					ComplexNumber bottomPixel	= getComplexNumberForXY(new PVector(x, y + 1));
-					ComplexNumber leftPixel	    = getComplexNumberForXY(new PVector(x - 1, y));
-					ComplexNumber rightPixel	= getComplexNumberForXY(new PVector(x + 1, y));
+					ComplexNumber_BigD topPixel		= getComplexNumberForXY(new PVector(x, y - 1));
+					ComplexNumber_BigD bottomPixel	= getComplexNumberForXY(new PVector(x, y + 1));
+					ComplexNumber_BigD leftPixel	= getComplexNumberForXY(new PVector(x - 1, y));
+					ComplexNumber_BigD rightPixel	= getComplexNumberForXY(new PVector(x + 1, y));
 
 					// Calculate partial steps towards adjacent pixels
-					ComplexNumber upPoint		= centerPoint.getOneThirdStepTowards(topPixel);
-					ComplexNumber downPoint		= centerPoint.getOneThirdStepTowards(bottomPixel);
-					ComplexNumber leftPoint		= centerPoint.getOneThirdStepTowards(leftPixel);
-					ComplexNumber rightPoint	= centerPoint.getOneThirdStepTowards(rightPixel);
+					ComplexNumber_BigD upPoint		= centerPoint.getOneThirdStepTowards(topPixel);
+					ComplexNumber_BigD downPoint	= centerPoint.getOneThirdStepTowards(bottomPixel);
+					ComplexNumber_BigD leftPoint	= centerPoint.getOneThirdStepTowards(leftPixel);
+					ComplexNumber_BigD rightPoint	= centerPoint.getOneThirdStepTowards(rightPixel);
 
 					// Calculate Mandelbrot values for outward steps
-					Color upColor		= calcMandelPoint(new ComplexNumber<T>(NUM, this), upPoint, maxIterations);
-					Color downColor		= calcMandelPoint(new ComplexNumber<T>(NUM, this), downPoint, maxIterations);
-					Color leftColor		= calcMandelPoint(new ComplexNumber<T>(NUM, this), leftPoint, maxIterations);
-					Color rightColor	= calcMandelPoint(new ComplexNumber<T>(NUM, this), rightPoint, maxIterations);
+					Color upColor		= calcMandelPoint(ComplexNumber_BigD.ZERO, upPoint, maxIterations);
+					Color downColor		= calcMandelPoint(ComplexNumber_BigD.ZERO, downPoint, maxIterations);
+					Color leftColor		= calcMandelPoint(ComplexNumber_BigD.ZERO, leftPoint, maxIterations);
+					Color rightColor	= calcMandelPoint(ComplexNumber_BigD.ZERO, rightPoint, maxIterations);
 
 					//Save average color value as pixel //Move this outside the main calc method; as is, it calculates the normal color even when trying to calculate intermediates, doubling the work.
 					//And smooth doesn't seem to take effect on intermediates in terms of actual results, it only makes the calculation slower, because it's calculating the smooth for the normal color,
 					//and then throwing it away, and not calculating smooth for the intermediates.
 					appContext.writePixelData(pixelIndex, ColorUtils.avgColors(upColor, downColor, leftColor, rightColor));
 				} else {
-					appContext.writePixelData(pixelIndex, calcMandelPoint(new ComplexNumber<T>(NUM, this), centerPoint, maxIterations));
+					appContext.writePixelData(pixelIndex, calcMandelPoint(ComplexNumber_BigD.ZERO, centerPoint, maxIterations));
 				}
 			}
 		}
@@ -183,9 +140,7 @@ public class MathALU<T extends SupportedNumeric<T>> {
 	}
 
 
-	Color calcMandelPoint(ComplexNumber z, ComplexNumber ORIG_C, final int iterationLimit) {
-		AppContext appContext = App.APP_CONTEXT;
-
+	static Color calcMandelPoint(ComplexNumber_BigD z, ComplexNumber_BigD ORIG_C, final int iterationLimit) {
 		// Run through the mandelbrot's recursive calculation for the given
 		// complex number.
 		int numIterations = 0;
@@ -235,14 +190,14 @@ public class MathALU<T extends SupportedNumeric<T>> {
 			}
 
 			// Check for overflow
-			T magnitude = (T) (appContext.SIMPLE_MAGNITUDE ? z.getSimpleMagnitude() : z.getMagnitude());
-			if (magnitude.compareTo(getFor(appContext.getOverflowThreshold())) > 0) {
+			BigDecimal magnitude = appContext.SIMPLE_MAGNITUDE ? z.getSimpleMagnitude() : z.getMagnitude();
+			if (magnitude.compareTo(getBigD(appContext.getOverflowThreshold())) > 0) {
 				break;
 			}
 		}
 
 		// Calculate Grayscale Brightness
-		final int brightness = map(getFor(numIterations), getFor(0), getFor(iterationLimit), getFor(0), getFor(255)).intValue();//TODO .intValueExact()? threw error: "rounding necessary"; maybe "...exact()" is a sort of "doThisOrDie" type of thing.
+		final int brightness = mapInt(numIterations, 0, iterationLimit, 0, 255).intValue();//TODO .intValueExact()? threw error: "rounding necessary"; maybe "...exact()" is a sort of "doThisOrDie" type of thing.
 
 		// Determine Pixel Color
 		Color pixelColor;
@@ -286,39 +241,32 @@ public class MathALU<T extends SupportedNumeric<T>> {
 	// basically give a half-res
 	// preview of the whole canvas in half the time.
 	static int getPixelIndexForXY(final PVector point) {
-		return (int) (point.x + (point.y * App.APP_CONTEXT.width));
+		return (int) (point.x + (point.y * appContext.width));
 	}
 
-	ComplexNumber getComplexNumberForXY(final PVector p) {
-		AppContext appContext = App.APP_CONTEXT;
-
-		return new ComplexNumber<>(
-				NUM,
-				this,
-				map(getFor(p.x), getFor(0), getFor(appContext.width),  getFor(appContext.CURRENT_VIEWPORT.minX), getFor(appContext.CURRENT_VIEWPORT.maxX)),
-				map(getFor(p.y), getFor(0), getFor(appContext.height), getFor(appContext.CURRENT_VIEWPORT.minY), getFor(appContext.CURRENT_VIEWPORT.maxY))
-		);
-//		return null;//TODO
+	static ComplexNumber_BigD getComplexNumberForXY(final PVector point) {
+//		return new ComplexNumber_BigD(   mapDouble(getBigD((int) point.x), BigDecimal.ZERO, getBigD(appContext.width), appContext.CURRENT_VIEWPORT.minX, appContext.CURRENT_VIEWPORT.maxX),
+//										 mapDouble(getBigD((int) point.y), BigDecimal.ZERO, getBigD(appContext.height), appContext.CURRENT_VIEWPORT.minY, appContext.CURRENT_VIEWPORT.maxY));
+		return null;//TODO
 	}
 
-	PVector getXYForComplexNumber(final ComplexNumber point) {
-		AppContext appContext = App.APP_CONTEXT;
-
+	static PVector getXYForComplexNumber(final ComplexNumber_BigD point) {
 		// Check if point is outside viewport
-		if (point.real.compareTo(appContext.CURRENT_VIEWPORT.minX) <= 0 || point.real.compareTo(appContext.CURRENT_VIEWPORT.maxX) >= 0 ||
-			point.imaginary.compareTo(appContext.CURRENT_VIEWPORT.minY) <= 0 || point.imaginary.compareTo(appContext.CURRENT_VIEWPORT.maxY) >= 0) {
-
-			return null;
-		}
-		return new PVector(
-				map(getFor(point.real),      getFor(appContext.CURRENT_VIEWPORT.minX), getFor(appContext.CURRENT_VIEWPORT.maxX), getFor(0), getFor(appContext.width)).intValue(),//TODO .intValueExact()?
-				map(getFor(point.imaginary), getFor(appContext.CURRENT_VIEWPORT.minY), getFor(appContext.CURRENT_VIEWPORT.maxY), getFor(0), getFor(appContext.height)).intValue()
-		);
-//		return null;//TODO
+//		if (point.real.compareTo(appContext.CURRENT_VIEWPORT.minX) <= 0 || point.real.compareTo(appContext.CURRENT_VIEWPORT.maxX) >= 0
+//				|| point.imaginary.compareTo(appContext.CURRENT_VIEWPORT.minY) <= 0 || point.imaginary.compareTo(appContext.CURRENT_VIEWPORT.maxY) >= 0) {
+//
+//			return null;
+//		}
+//		return new PVector( mapDouble(point.real,      appContext.CURRENT_VIEWPORT.minX, appContext.CURRENT_VIEWPORT.maxX, BigDecimal.ZERO, getBigD(appContext.width)).intValue(),//TODO .intValueExact()?
+//							mapDouble(point.imaginary, appContext.CURRENT_VIEWPORT.minY, appContext.CURRENT_VIEWPORT.maxY, BigDecimal.ZERO, getBigD(appContext.height)).intValue());
+		return null;//TODO
 	}
 
-	static ComplexNumber mandelFunc(final ComplexNumber c, final ComplexNumber ORIG_C) {
+	static ComplexNumber_BigD mandelFunc(final ComplexNumber_BigD c, final ComplexNumber_BigD ORIG_C) {
 		return c.getSquaredVal().add(ORIG_C);
 	}
 
+	static BigDecimal getBigD(final int intNum) {
+		return new BigDecimal(String.valueOf(intNum));
+	}
 }

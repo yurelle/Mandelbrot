@@ -12,7 +12,15 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>11</maven.compiler.release>
   </properties>
+
+  <!--<repositories>-->
+    <!--<repository>-->
+      <!--<id>hellblazer-snapshots</id>-->
+      <!--<url>https://repository-hal900000.forge.cloudbees.com/snapshot/</url>-->
+    <!--</repository>-->
+  <!--</repositories>-->
 
   <dependencies>
     <dependency>
@@ -21,5 +29,12 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+
+    <!--<dependency>-->
+      <!--<groupId>com.hellblazer</groupId>-->
+      <!--<artifactId>utils</artifactId>-->
+      <!--<version>0.0.3</version>-->
+      <!--<version>0.0.5</version>-->
+    <!--</dependency>-->
   </dependencies>
 </project>

@@ -1,12 +1,10 @@
 package misc.mandelbrot;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
+import hellblazer.math.DoubleDouble;
+
+import javax.swing.*;
+import javax.swing.event.MouseInputListener;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -15,16 +13,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.JPanel;
-import javax.swing.event.MouseInputListener;
-
 public class ContentCanvas extends JPanel implements KeyListener, MouseInputListener {
 	private AppContext appContext;
 	
 	private Color BG_COLOR;
 	private BufferedImage contentImage;
 	private ScheduledExecutorService fpsTimer = new ScheduledThreadPoolExecutor(1);
-	
+
 	public ContentCanvas() {
 		appContext = App.APP_CONTEXT;
 		
@@ -138,7 +133,7 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 		if (appContext.SHOW_MENU) {
 		//--Draw Menu Box
 			g.setStroke(new BasicStroke(1));
-			Rectangle menuBox = new Rectangle(0, 0, 310, 265);
+			Rectangle menuBox = new Rectangle(0, 0, 310, 305);
 			
 			//Background fill
 			g.setColor(new Color(128, 128, 128, 255));
@@ -205,9 +200,6 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 		
 		// Ensure that we were/are-still dragging
 		if (mouseDragging) {
-			// Save Previous Viewport
-			final Viewport previousViewport = appContext.pushCurrentViewport();
-
 			// Determine Drag Space
 			final int boxSize = Math.max(mouseX - _mouseDragStartX, mouseY - _mouseDragStartY);
 			final int originX = Math.min(mouseX, _mouseDragStartX);
@@ -226,13 +218,26 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 				// height, previousViewport.minY, previousViewport.maxY);
 
 				// Set New Viewport (Maintain aspect Ratio)
-				appContext.CURRENT_VIEWPORT.minX = MathALU.mapDouble(originX, 0, appContext.width, previousViewport.minX, previousViewport.maxX);
-				appContext.CURRENT_VIEWPORT.minY = MathALU.mapDouble(originY, 0, appContext.height, previousViewport.minY, previousViewport.maxY);
-				appContext.CURRENT_VIEWPORT.maxX = MathALU.mapDouble(originX + boxSize, 0, appContext.width, previousViewport.minX, previousViewport.maxX);
-				appContext.CURRENT_VIEWPORT.maxY = MathALU.mapDouble(originY + boxSize, 0, appContext.height, previousViewport.minY, previousViewport.maxY);
+				appContext.setNewViewport(originX, originY, boxSize);
 
-				// Calculate New Viewport Data
-				appContext.rebuildPixelData();
+				//Double
+//				appContext.CURRENT_VIEWPORT.minX = MathALU.mapDouble(originX,           0, appContext.width, previousViewport.minX, previousViewport.maxX);
+//				appContext.CURRENT_VIEWPORT.minY = MathALU.mapDouble(originY,           0, appContext.height, previousViewport.minY, previousViewport.maxY);
+//				appContext.CURRENT_VIEWPORT.maxX = MathALU.mapDouble(originX + boxSize, 0, appContext.width, previousViewport.minX, previousViewport.maxX);
+//				appContext.CURRENT_VIEWPORT.maxY = MathALU.mapDouble(originY + boxSize, 0, appContext.height, previousViewport.minY, previousViewport.maxY);
+
+				//BigDecimal
+//				appContext.CURRENT_VIEWPORT.minX = MathALU_BigD.mapDouble(MathALU_BigD.getBigD(originX),            BigDecimal.ZERO, MathALU_BigD.getBigD(appContext.width),    previousViewport.minX, previousViewport.maxX);
+//				appContext.CURRENT_VIEWPORT.minY = MathALU_BigD.mapDouble(MathALU_BigD.getBigD(originY),            BigDecimal.ZERO, MathALU_BigD.getBigD(appContext.height),   previousViewport.minY, previousViewport.maxY);
+//				appContext.CURRENT_VIEWPORT.maxX = MathALU_BigD.mapDouble(MathALU_BigD.getBigD(originX + boxSize),  BigDecimal.ZERO, MathALU_BigD.getBigD(appContext.width),    previousViewport.minX, previousViewport.maxX);
+//				appContext.CURRENT_VIEWPORT.maxY = MathALU_BigD.mapDouble(MathALU_BigD.getBigD(originY + boxSize),  BigDecimal.ZERO, MathALU_BigD.getBigD(appContext.height),   previousViewport.minY, previousViewport.maxY);
+
+				//DoubleDouble
+//				appContext.CURRENT_VIEWPORT.minX = MathALU_DD.mapDouble(MathALU_DD.getDD(originX),            DoubleDouble.ZERO, MathALU_DD.getDD(appContext.width),    previousViewport.minX, previousViewport.maxX);
+//				appContext.CURRENT_VIEWPORT.minY = MathALU_DD.mapDouble(MathALU_DD.getDD(originY),            DoubleDouble.ZERO, MathALU_DD.getDD(appContext.height),   previousViewport.minY, previousViewport.maxY);
+//				appContext.CURRENT_VIEWPORT.maxX = MathALU_DD.mapDouble(MathALU_DD.getDD(originX + boxSize),  DoubleDouble.ZERO, MathALU_DD.getDD(appContext.width),    previousViewport.minX, previousViewport.maxX);
+//				appContext.CURRENT_VIEWPORT.maxY = MathALU_DD.mapDouble(MathALU_DD.getDD(originY + boxSize),  DoubleDouble.ZERO, MathALU_DD.getDD(appContext.height),   previousViewport.minY, previousViewport.maxY);
+
 			}
 		}
 
@@ -262,9 +267,9 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 	public void mouseEntered(MouseEvent arg0) {}
 	public void mouseExited(MouseEvent arg0) {}
 	public void keyPressed(KeyEvent e) {}
-	public void keyReleased(KeyEvent e) {}
+	public void keyTyped(KeyEvent e) {}
 
-	public void keyTyped(KeyEvent keyEvent) {
+	public void keyReleased(KeyEvent keyEvent) {
 		char key = keyEvent.getKeyChar();
 		int keyCode = keyEvent.getKeyCode();
 		
@@ -315,7 +320,7 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 
 			// Rebuild Data
 			appContext.rebuildPixelData();
-		} else if (key == KeyEvent.VK_HOME) {
+		} else if (keyCode == KeyEvent.VK_HOME) {
 			// Save current viewport
 			appContext.pushCurrentViewport();
 
@@ -353,27 +358,53 @@ public class ContentCanvas extends JPanel implements KeyListener, MouseInputList
 				appContext.rebuildPixelData();
 			}
 		} else if (key == '-') {
+			// Decrement
+			appContext.MAX_ITERATIONS_INDEX--;
+
 			// Underflow Check
-			if (appContext.MAX_ITERATIONS_INDEX <= 0) {
+			if (appContext.MAX_ITERATIONS_INDEX < 0) {
 				appContext.MAX_ITERATIONS_INDEX = 0;
-			} else {
-				// Decrement
-				appContext.MAX_ITERATIONS_INDEX--;
-
-				// Calculate New Viewport Data
-				appContext.rebuildPixelData();
 			}
+
+			// Calculate New Viewport Data
+			appContext.rebuildPixelData();
 		} else if (key == '+') {
-			// Overflow Check
-			if (appContext.MAX_ITERATIONS_INDEX >= appContext.ITERATION_OPTIONS.length - 1) {
-				appContext.MAX_ITERATIONS_INDEX = appContext.ITERATION_OPTIONS.length - 1;
-			} else {
-				// Increment
-				appContext.MAX_ITERATIONS_INDEX++;
+			// Increment
+			appContext.MAX_ITERATIONS_INDEX++;
 
-				// Calculate New Viewport Data
-				appContext.rebuildPixelData();
+			// Overflow Check
+			if (appContext.MAX_ITERATIONS_INDEX > appContext.ITERATION_OPTIONS.length - 1) {
+				appContext.MAX_ITERATIONS_INDEX = appContext.ITERATION_OPTIONS.length - 1;
 			}
+
+			// Calculate New Viewport Data
+			appContext.rebuildPixelData();
+		} else if (keyCode == KeyEvent.VK_DOWN) {
+			System.out.println("Down Arrow");
+
+			// Decrement
+			appContext.CURRENT_PRECISION--;
+
+			// Underflow Check
+			if (appContext.CURRENT_PRECISION < 0) {
+				appContext.CURRENT_PRECISION = 0;
+			}
+
+			// Calculate New Viewport Data
+			appContext.rebuildPixelData();
+		} else if (keyCode == KeyEvent.VK_UP) {
+			System.out.println("Up Arrow");
+
+			// Increment
+			appContext.CURRENT_PRECISION++;
+
+			// Overflow Check
+			if (appContext.CURRENT_PRECISION > appContext.MAX_PRECISION) {
+				appContext.CURRENT_PRECISION = appContext.MAX_PRECISION;
+			}
+
+			// Calculate New Viewport Data
+			appContext.rebuildPixelData();
 		} else if (key >= '0' && key <= '9') {
 			// Convert to array index
 			int index = key - '0';

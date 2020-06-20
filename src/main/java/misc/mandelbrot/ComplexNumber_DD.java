@@ -1,6 +1,9 @@
 package misc.mandelbrot;
 
-import misc.mandelbrot.number.SupportedNumeric;
+import hellblazer.math.DoubleDouble;
+
+import java.math.BigDecimal;
+import java.math.MathContext;
 
 /**
  * A complex number is composed of 2 pieces: a real number & an imaginary number.
@@ -9,50 +12,21 @@ import misc.mandelbrot.number.SupportedNumeric;
  * ('i' is the symbol representing the sqrt(-1))
  * 
  */
-public class ComplexNumber<T extends SupportedNumeric<T>> {
+public class ComplexNumber_DD {
+	static final ComplexNumber_DD ZERO = new ComplexNumber_DD(DoubleDouble.ZERO, DoubleDouble.ZERO);
 
 	//Single Precision
-	T real;
-	T imaginary;
+	DoubleDouble real;
+	DoubleDouble imaginary;
 
-	//Precision Handle
-	private final T NUM;
-	private final MathALU<T> ALU;
-	private final CxNumProps CX_NUM_PROPS;
-
-	ComplexNumber(T NUM, MathALU<T> ALU) {
-		this.real = NUM.getFor(0);
-		this.imaginary = NUM.getFor(0);
-
-		this.NUM = NUM;
-		this.ALU = ALU;
-		this.CX_NUM_PROPS = new CxNumProps(NUM, ALU);
+	ComplexNumber_DD() {
+		this.real = DoubleDouble.ZERO;
+		this.imaginary = DoubleDouble.ZERO;
 	}
 
-	ComplexNumber(T NUM, MathALU<T> ALU, final T real, final T imaginary) {
-		this(NUM, ALU);
-
+	ComplexNumber_DD(final DoubleDouble real, final DoubleDouble imaginary) {
 		this.real = real;
 		this.imaginary = imaginary;
-	}
-
-	public class CxNumProps<T extends SupportedNumeric<T>> {
-		//Precision Handle
-		private T NUM;
-		private MathALU<T> ALU;
-
-		CxNumProps(T NUM, MathALU<T> ALU) {
-			this.NUM = NUM;
-			this.ALU = ALU;
-		}
-
-		public ComplexNumber<T> create() {
-			return new ComplexNumber<>(NUM, ALU, NUM.getFor(0), NUM.getFor(0));
-		}
-
-		public ComplexNumber<T> create(final T real, final T imaginary) {
-			return new ComplexNumber<>(NUM, ALU, real, imaginary);
-		}
 	}
 	
 	/**
@@ -71,14 +45,14 @@ public class ComplexNumber<T extends SupportedNumeric<T>> {
 	 * Real: [a^2 - b^2]
 	 * Imaginary: [2abi] => [2ab]*i
 	 */
-	ComplexNumber<T> getSquaredVal() {
-		ComplexNumber<T> z = CX_NUM_PROPS.create();
+	ComplexNumber_DD getSquaredVal() {
+		ComplexNumber_DD z = new ComplexNumber_DD();
 		
 		//a^2 - b^2
 		z.real = this.real.multiply(this.real).subtract(this.imaginary.multiply(this.imaginary));
 		
 		//2ab [i]
-		z.imaginary = NUM.getFor(2).multiply(this.real).multiply(this.imaginary);
+		z.imaginary = MathALU_DD.getDD(2).multiply(this.real).multiply(this.imaginary);
 		
 		return z;
 	}
@@ -88,8 +62,8 @@ public class ComplexNumber<T extends SupportedNumeric<T>> {
 	 * added to the given Complex Number Object. The returned object is completely separate from this object;
 	 * both this Complex Number object & the passed in object remain unchanged, and retain their original values.
 	 */
-	ComplexNumber<T> add(final ComplexNumber<T> c_in) {
-		ComplexNumber<T> c_out = CX_NUM_PROPS.create();
+	ComplexNumber_DD add(final ComplexNumber_DD c_in) {
+		ComplexNumber_DD c_out = new ComplexNumber_DD();
 		
 		c_out.real = this.real.add(c_in.real);
 		c_out.imaginary = this.imaginary.add(c_in.imaginary);
@@ -102,8 +76,8 @@ public class ComplexNumber<T extends SupportedNumeric<T>> {
 	 * Complex Number towards the given Complex Number. The returned object is completely separate from this object;
 	 * both this Complex Number object & the passed in object remain unchanged, and retain their original values.
 	 */
-	ComplexNumber<T> getOneThirdStepTowards(final ComplexNumber<T> dest) {
-		ComplexNumber<T> result = CX_NUM_PROPS.create();
+	ComplexNumber_DD getOneThirdStepTowards(final ComplexNumber_DD dest) {
+		ComplexNumber_DD result = new ComplexNumber_DD();
 		result.real = calcOneThirdTo(this.real, dest.real);
 		result.imaginary = calcOneThirdTo(this.imaginary, dest.imaginary);
 		
@@ -114,9 +88,9 @@ public class ComplexNumber<T extends SupportedNumeric<T>> {
 	 * x1 is the starting point;
 	 * x2 is the destination.
 	 */
-	private T calcOneThirdTo(final T x1, final T x2) {
+	private DoubleDouble calcOneThirdTo(final DoubleDouble x1, final DoubleDouble x2) {
 		//By keeping the calculation in the form [dest] - [start], the positive/negative will automatically be correct for combining with simple addition (i.e. no condition logic necessary).
-		final T distance = x2.subtract(x1).divide(NUM.getFor(3));
+		final DoubleDouble distance = x2.subtract(x1).divide(MathALU_DD.getDD(3));
 		return x1.add(distance);
 	}
 	
@@ -129,10 +103,10 @@ public class ComplexNumber<T extends SupportedNumeric<T>> {
 	 *
 	 * See: https://www.khanacademy.org/math/precalculus/imaginary-and-complex-numbers/absolute-value-and-angle-of-complex-numbers/v/absolute-value-of-a-complex-number
 	 */
-	T getMagnitude() {
+	DoubleDouble getMagnitude() {
 		return (this.real.multiply(this.real).add(this.imaginary.multiply(this.imaginary))).sqrt();
 	}
-	T getSimpleMagnitude() {
+	DoubleDouble getSimpleMagnitude() {
 		//Inaccurate mathematically speaking, but a slightly faster calculation & produces a cool spikey webbing pattern in the background data.
 		return this.real.add(this.imaginary).abs();//Surprisingly, the core mandelbrot fractal remains utterly unchanged. Weird!
 	}

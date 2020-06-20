@@ -1,5 +1,7 @@
 package misc.mandelbrot;
 
+import misc.mandelbrot.number.SupportedNumeric;
+
 import java.awt.Color;
 
 public class ColorUtils {
@@ -29,7 +31,8 @@ public class ColorUtils {
 		final long log_maxVal = log_nonNull(maxVal);
 		
 		//Scale brightness to 255
-		return (int) Math.round(MathALU.mapDouble(log_pixelVal, 0, log_maxVal, 0, 255));
+		MathALU<? extends SupportedNumeric<?>> ALU = appContext.getALU();
+		return (int) Math.round(ALU.mapLong(log_pixelVal, 0, log_maxVal, 0, 255).doubleValue());
 	}
 	
 	static long log_nonNull(final long rawVal) {
@@ -71,7 +74,8 @@ public class ColorUtils {
 		final int cycleVal = val % appContext.CYCLE_PERIOD;
 
 		// Scale cycle value back up to the full color space
-		final int heatVal = (int) MathALU.mapDouble(cycleVal, 0, appContext.CYCLE_PERIOD, 0, appContext.CHUNK_RANGE);
+		MathALU<? extends SupportedNumeric<?>> ALU = appContext.getALU();
+		final int heatVal = (int) ALU.mapDouble(cycleVal, 0, appContext.CYCLE_PERIOD, 0, appContext.CHUNK_RANGE).doubleValue();
 
 		// Scale value to full iteration range
 		// int heatVal = (int) map(val, 0, getMaxIterations(), 0, CHUNK_RANGE);
