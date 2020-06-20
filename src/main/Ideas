@@ -15,3 +15,11 @@ function, the context switching overhead probably doesn't matter, and maybe regu
 - Look into GPU accelleration. This would be fine for single & double precision, but you'd have to port the DoubleDouble
 quad precision implementation into OpenCL, and the BigDecimal would be totally unsupported, unless you could find a
 similar library in OpenCL.
+
+Add a calculation cache in the numeric classes, which only cache intermediate values within the calculation phase of a single pixel.
+The purpose being to catch looping calculations. Not sure how common those are, but I suppose the only way to find out, would be to
+implement it and then benchmark it.
+
+convert viewport to be set based upon a center point rather than the top left corner. This will make deep zooming to an exact point
+much easier, and also animatable.
+
